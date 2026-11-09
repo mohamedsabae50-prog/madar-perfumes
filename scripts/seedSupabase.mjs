@@ -10,13 +10,13 @@ if (existsSync('.env')) {
 }
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY
+const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env before seeding.')
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Set VITE_SUPABASE_URL and either VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY in .env before seeding.')
 }
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: false },
 })
 
