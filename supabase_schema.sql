@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS store_settings (
   show_iconic_section boolean DEFAULT true,
   show_coupons_section boolean DEFAULT true,
   show_quiz_section boolean DEFAULT true,
+  quiz_questions jsonb DEFAULT '[]'::jsonb,
   admin_pin text DEFAULT '2026',
   admin_pin_hash text DEFAULT ''
 );
@@ -42,6 +43,7 @@ ALTER TABLE store_settings ADD COLUMN IF NOT EXISTS hero_subtitle_en text DEFAUL
 ALTER TABLE store_settings ADD COLUMN IF NOT EXISTS show_iconic_section boolean DEFAULT true;
 ALTER TABLE store_settings ADD COLUMN IF NOT EXISTS show_coupons_section boolean DEFAULT true;
 ALTER TABLE store_settings ADD COLUMN IF NOT EXISTS show_quiz_section boolean DEFAULT true;
+ALTER TABLE store_settings ADD COLUMN IF NOT EXISTS quiz_questions jsonb DEFAULT '[]'::jsonb;
 
 CREATE TABLE IF NOT EXISTS quiz_questions (
   id text PRIMARY KEY DEFAULT 'default',

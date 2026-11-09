@@ -86,6 +86,7 @@ const orders = seedData.orders.map((order) => ({
 }))
 
 const settings = { id: 1, ...seedData.settings }
+settings.quiz_questions = quizQuestions
 delete settings.splash_mode
 
 const datasets = [
