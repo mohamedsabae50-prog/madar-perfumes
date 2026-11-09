@@ -1,24 +1,18 @@
-# React + Vite
+# MADAR Storefront
 
-## Supabase setup
+The customer storefront is deployed independently from the MADAR Admin project. Both projects use the same Supabase project and refresh store data on page load, tab focus, and Supabase Realtime changes.
 
-1. Copy `.env.example` to `.env` and set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to your project values.
-2. Run `supabase_schema.sql` in the Supabase SQL Editor.
-3. Run `npm run supabase:seed` to upsert the default categories, products, coupons, customers, orders, quiz, and store settings.
+## Local development
 
-The seed command can be rerun safely. It uses the public anon key from `.env`; do not put a service-role key in the Vite environment.
+1. Copy `.env.example` to `.env` and set `VITE_SUPABASE_URL` plus `VITE_SUPABASE_PUBLISHABLE_KEY` or `VITE_SUPABASE_ANON_KEY`.
+2. Run `supabase_schema.sql` in the Supabase SQL Editor. This creates the tables and enables the relevant tables in the `supabase_realtime` publication.
+3. Run `npm install`, then `npm run dev`.
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The seed command can be rerun safely with `npm run supabase:seed`. It uses the public anon/publishable key; never put a service-role key in the Vite environment.
 
-Currently, two official plugins are available:
+## Separate deployments
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- `mohamedsabae50-prog/madar-perfumes` serves the customer storefront at `/`.
+- `mohamedsabae50-prog/madar-admin` serves the admin portal at `/`. Set `VITE_STOREFRONT_URL` in the admin deployment to the storefront's deployed URL; it defaults to the storefront repository URL.
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Configure both Vercel projects with the same Supabase URL and public publishable/anon key. Keep `.env` local and untracked.

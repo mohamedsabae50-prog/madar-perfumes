@@ -572,7 +572,7 @@ function IconicHero({ language, isRevealing, pouringActive, settings }) {
   )
 }
 
-function IconicEditorial({ product, products, language, addToCart, adminMode = false, onSelectTopSeller, onEditProduct }) {
+function IconicEditorial({ product, language, addToCart }) {
   const [selectedSizeName, setSelectedSizeName] = useState('')
   if (!product) return null
 
@@ -582,22 +582,6 @@ function IconicEditorial({ product, products, language, addToCart, adminMode = f
     <section id="iconic" className="relative scroll-mt-24 border-b border-[#F2E9DF]/10 bg-[#090204]">
       <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-12 md:py-24">
         <div className="relative mb-10 border-b border-[#D5BFA8]/25 pb-5">
-          {adminMode && (
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#D5BFA8]/30 bg-[#140409] p-3 shadow-lg">
-              <label className="flex flex-wrap items-center gap-2 text-xs text-[#D5BFA8]">
-                ★ العطر المعروض في الأكثر مبيعاً:
-                <select
-                  aria-label="العطر المعروض في الأكثر مبيعاً"
-                  value={product?.id || ''}
-                  onChange={(event) => onSelectTopSeller(event.target.value)}
-                  className="max-w-full border border-[#D5BFA8]/30 bg-[#090204] px-3 py-2 text-xs text-[#F2E9DF]"
-                >
-                  {products.filter((item) => item.active !== false).map((item) => <option key={item.id} value={item.id}>{renderText(language, item.name_ar, item.name_en)}</option>)}
-                </select>
-              </label>
-              {product && <button type="button" onClick={() => onEditProduct(product)} className="border border-[#D5BFA8]/30 px-3 py-2 text-xs text-[#D5BFA8]">✎ تعديل بيانات وأسعار هذا العطر</button>}
-            </div>
-          )}
           <p className="inline-flex border border-[#D5BFA8]/35 bg-[#581528]/30 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-[#D5BFA8]">TOP SELLING | العطر الأكثر مبيعاً</p>
           <h2 className="mt-4 font-['Amiri'] text-4xl text-[#F2E9DF] md:text-6xl">{renderText(language, 'العطر الأكثر مبيعاً وطلباً', 'Top Selling Signature Fragrance')}</h2>
         </div>
@@ -923,25 +907,13 @@ function CosmicSplashScreen({ language, settings, onWarp, onFinish }) {
   )
 }
 
-function OrbitConsultation({ products, questions, language, addToCart, adminMode = false, onSaveQuestions }) {
+function OrbitConsultation({ products, questions, language, addToCart }) {
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState({})
   const [selectedSizes, setSelectedSizes] = useState({})
-  const [quizEditMode, setQuizEditMode] = useState(adminMode)
   const question = questions[step]
   const recommendations = useMemo(() => getQuizRecommendations(questions, answers, products), [answers, products, questions])
-  const updateQuestion = (questionId, patch) => onSaveQuestions(questions.map((item) => item.id === questionId ? { ...item, ...patch } : item))
-  const addQuestion = () => onSaveQuestions([...questions, { id: `question-${globalThis.crypto?.randomUUID?.() || Date.now()}`, question_ar: '', question_en: '', options: [] }])
-  const updateOption = (questionId, optionId, patch) => onSaveQuestions(questions.map((item) => item.id !== questionId ? item : {
-    ...item,
-    options: (item.options || []).map((option) => option.id === optionId ? { ...option, ...patch } : option),
-  }))
-  const addOption = (question) => updateQuestion(question.id, {
-    options: [...(question.options || []), {
-      id: `option-${globalThis.crypto?.randomUUID?.() || Date.now()}`,
-      label_ar: '', label_en: '', desc_ar: '', desc_en: '', recommended_product_ids: [],
-    }],
-  })
+  const takingQuiz = questions.length > 0 && step < questions.length
 
   return (
     <section id="quiz" className="scroll-mt-24 border-y border-[#F2E9DF]/10 bg-[#140409]">
@@ -951,59 +923,10 @@ function OrbitConsultation({ products, questions, language, addToCart, adminMode
             <p className="text-[9px] uppercase tracking-[0.3em] text-[#D5BFA8]">{renderText(language, 'اختبار العطر', 'SCENT QUIZ')}</p>
             <h2 className="mt-4 font-['Amiri'] text-5xl text-[#F2E9DF]">{renderText(language, 'اعرف عطرك المناسب', 'Find Your Scent')}</h2>
             <p className="mt-5 max-w-sm text-sm leading-7 text-[#A8958B]">{renderText(language, 'أجب عن الأسئلة لنحسب العطر الأقرب إليك.', 'Answer the questions to discover your closest scent match.')}</p>
-            {questions.length > 0 && <p className="mt-6 text-sm text-[#D5BFA8]">{renderText(language, `السؤال ${Math.min(step + 1, questions.length)} من ${questions.length}`, `Question ${Math.min(step + 1, questions.length)} of ${questions.length}`)}</p>}
+            {takingQuiz && <p className="mt-6 text-sm text-[#D5BFA8]">{renderText(language, `السؤال ${step + 1} من ${questions.length}`, `Question ${step + 1} of ${questions.length}`)}</p>}
           </div>
           <div className="min-h-[330px] border border-[#F2E9DF]/15 bg-[#140409] p-6 md:p-10">
-            {adminMode && (
-              <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-[#F2E9DF]/15 pb-4">
-                <span className="text-[9px] uppercase tracking-[0.3em] text-[#D5BFA8]">MADAR · SCENT QUIZ</span>
-                <div className="flex flex-wrap gap-2">
-                  <button type="button" onClick={() => setQuizEditMode(false)} aria-pressed={!quizEditMode} className={`border px-3 py-2 text-xs ${!quizEditMode ? 'border-[#D5BFA8]/60 bg-[#581528]/40 text-[#F2E9DF]' : 'border-[#F2E9DF]/15 text-[#A8958B]'}`}>👁 تجربة الاختبار</button>
-                  <button type="button" onClick={() => setQuizEditMode(true)} aria-pressed={quizEditMode} className={`border px-3 py-2 text-xs ${quizEditMode ? 'border-[#D5BFA8]/60 bg-[#581528]/40 text-[#F2E9DF]' : 'border-[#F2E9DF]/15 text-[#A8958B]'}`}>✎ تعديل أسئلة ونتائج الاختبار</button>
-                </div>
-              </div>
-            )}
-            {adminMode && quizEditMode ? (
-              <div className="space-y-4">
-                {questions.map((item, questionIndex) => (
-                  <section key={item.id} className="space-y-3 border border-[#F2E9DF]/10 bg-[#100408] p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <h3 className="text-sm font-semibold text-[#D5BFA8]">{renderText(language, 'السؤال', 'Question')} {questionIndex + 1}</h3>
-                      <button type="button" onClick={() => onSaveQuestions(questions.filter((entry) => entry.id !== item.id))} className="border border-rose-200/20 px-3 py-2 text-xs text-rose-200">حذف السؤال</button>
-                    </div>
-                    <div className="grid gap-2 md:grid-cols-2">
-                      <input aria-label="Question Arabic" value={item.question_ar || ''} onChange={(event) => updateQuestion(item.id, { question_ar: event.target.value })} placeholder="السؤال بالعربية" className="w-full border border-[#F2E9DF]/15 bg-[#090204] p-3 text-sm text-[#F2E9DF]" />
-                      <input aria-label="Question English" value={item.question_en || ''} onChange={(event) => updateQuestion(item.id, { question_en: event.target.value })} placeholder="Question in English" className="w-full border border-[#F2E9DF]/15 bg-[#090204] p-3 text-sm text-[#F2E9DF]" />
-                    </div>
-                    {(item.options || []).map((option, optionIndex) => (
-                      <div key={option.id} className="space-y-3 border border-[#F2E9DF]/10 p-3">
-                        <div className="flex items-center justify-between text-xs text-[#A8958B]">
-                          <span>{renderText(language, 'إجابة', 'Answer')} {optionIndex + 1}</span>
-                          <button type="button" onClick={() => updateQuestion(item.id, { options: item.options.filter((entry) => entry.id !== option.id) })} className="text-rose-200">حذف الإجابة ×</button>
-                        </div>
-                        <div className="grid gap-2 md:grid-cols-2">
-                          {[
-                            ['label_ar', 'نص الإجابة بالعربية'],
-                            ['label_en', 'Answer label (English)'],
-                            ['desc_ar', 'وصف قصير بالعربية'],
-                            ['desc_en', 'Optional subtitle in English'],
-                          ].map(([key, placeholder]) => <input key={key} aria-label={placeholder} value={option[key] || ''} onChange={(event) => updateOption(item.id, option.id, { [key]: event.target.value })} placeholder={placeholder} className="w-full border border-[#F2E9DF]/15 bg-[#090204] p-3 text-sm text-[#F2E9DF]" />)}
-                        </div>
-                        <p className="text-[10px] text-[#A8958B]">اختر العطور التي تظهر كنتيجة لهذه الإجابة</p>
-                        <div className="flex flex-wrap gap-2">
-                          {products.map((product) => {
-                            const selected = (option.recommended_product_ids || []).includes(product.id)
-                            return <button key={product.id} type="button" aria-pressed={selected} onClick={() => updateOption(item.id, option.id, { recommended_product_ids: selected ? option.recommended_product_ids.filter((id) => id !== product.id) : [...(option.recommended_product_ids || []), product.id] })} className={`rounded-full border px-3 py-2 text-[10px] ${selected ? 'border-[#D5BFA8]/60 bg-[#581528]/50 text-[#F2E9DF]' : 'border-[#F2E9DF]/10 text-[#A8958B]'}`}>{renderText(language, product.name_ar, product.name_en)}</button>
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                    <button type="button" onClick={() => addOption(item)} className="border border-dashed border-[#D5BFA8]/40 px-3 py-2 text-xs text-[#D5BFA8]">+ إضافة إجابة</button>
-                  </section>
-                ))}
-                <button type="button" onClick={addQuestion} className="border border-dashed border-[#D5BFA8]/50 px-4 py-3 text-sm text-[#D5BFA8]">+ إضافة سؤال</button>
-              </div>
-            ) : questions.length > 0 && step < questions.length ? (
+            {takingQuiz ? (
               <>
                 <div className="mb-8 flex items-center justify-between border-b border-[#F2E9DF]/15 pb-5">
                   <span className="text-[9px] uppercase tracking-[0.3em] text-[#D5BFA8]">{language === 'ar' ? `السؤال ${step + 1}` : `QUESTION ${String(step + 1).padStart(2, '0')}`}</span>
@@ -1018,12 +941,8 @@ function OrbitConsultation({ products, questions, language, addToCart, adminMode
                   ))}
                 </div>
                 <div className="mt-6 flex justify-between">
-                  <button type="button" disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))} className="border border-[#F2E9DF]/20 px-5 py-3 text-sm text-[#F2E9DF] disabled:opacity-40">
-                    {renderText(language, 'السابق', 'Previous')}
-                  </button>
-                  <button type="button" disabled={!answers[question.id]} onClick={() => setStep((current) => current + 1)} className="bg-[#F2E9DF] px-5 py-3 text-sm font-medium text-[#1A050B] disabled:opacity-40">
-                    {renderText(language, step === questions.length - 1 ? 'اعرف عطرك' : 'التالي', step === questions.length - 1 ? 'See your match' : 'Next')}
-                  </button>
+                  <button type="button" disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))} className="border border-[#F2E9DF]/20 px-5 py-3 text-sm text-[#F2E9DF] disabled:opacity-40">{renderText(language, 'السابق', 'Previous')}</button>
+                  <button type="button" disabled={!answers[question.id]} onClick={() => setStep((current) => current + 1)} className="bg-[#F2E9DF] px-5 py-3 text-sm font-medium text-[#1A050B] disabled:opacity-40">{renderText(language, step === questions.length - 1 ? 'اعرف عطرك' : 'التالي', step === questions.length - 1 ? 'See your match' : 'Next')}</button>
                 </div>
               </>
             ) : (
@@ -1047,11 +966,9 @@ function OrbitConsultation({ products, questions, language, addToCart, adminMode
                             ].map(([label, notes]) => <p key={label} className="text-xs leading-5 text-[#D5BFA8]"><span className="me-2 text-[#A8958B]">{label}</span>{(notes || []).join(' · ')}</p>)}
                           </div>
                           <div className="mt-4 flex flex-wrap gap-2">
-                          {recommendation.sizes?.map((size) => (
-                            <button key={size.size} type="button" disabled={size.in_stock === false} onClick={() => setSelectedSizes((current) => ({ ...current, [recommendation.id]: size.size }))} className={`border px-3 py-2 text-xs ${selectedSize?.size === size.size ? 'border-[#D5BFA8] bg-[#581528] text-[#F2E9DF]' : 'border-[#F2E9DF]/15 text-[#A8958B]'} disabled:opacity-40`}>
-                              {size.size}
-                            </button>
-                          ))}
+                            {recommendation.sizes?.map((size) => (
+                              <button key={size.size} type="button" disabled={size.in_stock === false} onClick={() => setSelectedSizes((current) => ({ ...current, [recommendation.id]: size.size }))} className={`border px-3 py-2 text-xs ${selectedSize?.size === size.size ? 'border-[#D5BFA8] bg-[#581528] text-[#F2E9DF]' : 'border-[#F2E9DF]/15 text-[#A8958B]'} disabled:opacity-40`}>{size.size}</button>
+                            ))}
                           </div>
                           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                             <DiscountPrice size={selectedSize} language={language} />
@@ -1063,7 +980,7 @@ function OrbitConsultation({ products, questions, language, addToCart, adminMode
                   })}
                 </div>
                 <div className="mt-5 flex gap-3">
-                  <button type="button" onClick={() => setStep(questions.length - 1)} className="border border-[#F2E9DF]/20 px-4 py-3 text-sm text-[#F2E9DF]">{renderText(language, 'السابق', 'Previous')}</button>
+                  {questions.length > 0 && <button type="button" onClick={() => setStep(questions.length - 1)} className="border border-[#F2E9DF]/20 px-4 py-3 text-sm text-[#F2E9DF]">{renderText(language, 'السابق', 'Previous')}</button>}
                   <button type="button" onClick={() => { setAnswers({}); setSelectedSizes({}); setStep(0) }} className="flex items-center gap-2 px-4 py-3 text-sm text-[#A8958B] hover:text-[#D5BFA8]"><RefreshCw className="h-3 w-3" /> {renderText(language, 'ابدأ من جديد', 'RESTART')}</button>
                 </div>
               </div>
@@ -1104,54 +1021,15 @@ function MadarBrandLockup({ settings, compact = false }) {
   )
 }
 
-function ProductOrbitModal({ product, onClose, language, addToCart, isWishlisted, onToggleWishlist, adminEditMode = false, categories = [], onSaveProduct }) {
+function ProductOrbitModal({ product, onClose, language, addToCart, isWishlisted, onToggleWishlist }) {
   const [selectedSizeName, setSelectedSizeName] = useState('')
   const [activeAngle, setActiveAngle] = useState(0)
-  const [draft, setDraft] = useState(() => structuredClone(product))
-  const [imageError, setImageError] = useState('')
 
   if (!product) return null
-  const currentProduct = adminEditMode ? draft : product
-  const sizes = currentProduct.sizes || []
+  const sizes = product.sizes || []
   const activeSize = sizes.find((size) => size.size === selectedSizeName) || sizes[0]
-  const longevityPercent = Math.min(100, Math.max(0, Number(currentProduct.longevity_percent ?? Number(currentProduct.longevity) * 8)))
-  const sillagePercent = Math.min(100, Math.max(0, Number(currentProduct.sillage_percent ?? currentProduct.sillage ?? 0)))
-  const updateDraft = (patch) => setDraft((current) => ({ ...current, ...patch }))
-  const updateSize = (index, patch) => updateDraft({ sizes: sizes.map((size, sizeIndex) => sizeIndex === index ? { ...size, ...patch } : size) })
-  const updateAngleImage = (image) => {
-    const gallery_images = [...(currentProduct.gallery_images || ['', '', ''])]
-    gallery_images[activeAngle] = image
-    updateDraft({ gallery_images, ...(activeAngle === 0 ? { image_url: image } : {}) })
-  }
-  const uploadAngleImage = async (file) => {
-    setImageError('')
-    try {
-      if (!file.type.startsWith('image/')) throw new Error('اختر ملف صورة صالحاً.')
-      if (file.size > 12_000_000) throw new Error('حجم الصورة يتجاوز 12 ميجابايت.')
-      const source = await new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('تعذرت قراءة الصورة.'))
-        reader.onerror = () => reject(new Error('تعذرت قراءة الصورة.'))
-        reader.readAsDataURL(file)
-      })
-      const image = await new Promise((resolve, reject) => {
-        const element = new Image()
-        element.onload = () => resolve(element)
-        element.onerror = () => reject(new Error('تعذر فتح الصورة.'))
-        element.src = source
-      })
-      const scale = Math.min(1, 1500 / Math.max(image.width, image.height))
-      const canvas = document.createElement('canvas')
-      canvas.width = Math.max(1, Math.round(image.width * scale))
-      canvas.height = Math.max(1, Math.round(image.height * scale))
-      const context = canvas.getContext('2d')
-      if (!context) throw new Error('تعذر تجهيز الصورة في هذا المتصفح.')
-      context.drawImage(image, 0, 0, canvas.width, canvas.height)
-      updateAngleImage(canvas.toDataURL('image/jpeg', 0.84))
-    } catch (error) {
-      setImageError(error.message || 'تعذر تحميل الصورة.')
-    }
-  }
+  const longevityPercent = Math.min(100, Math.max(0, Number(product.longevity_percent ?? Number(product.longevity) * 8)))
+  const sillagePercent = Math.min(100, Math.max(0, Number(product.sillage_percent ?? product.sillage ?? 0)))
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#140409]/75 p-3 backdrop-blur-sm sm:p-4">
@@ -1159,124 +1037,44 @@ function ProductOrbitModal({ product, onClose, language, addToCart, isWishlisted
         <div className="sticky top-0 z-20 flex items-center justify-between border-b border-[#F2E9DF]/10 bg-[#1D070E]/95 px-5 py-3 backdrop-blur">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-[#D5BFA8]">{renderText(language, 'مدار عطري', 'Fragrance Orbit')}</p>
-            <h3 className="mt-1 font-['Readex_Pro'] text-xl leading-relaxed text-[#F2E9DF]">{renderText(language, currentProduct.name_ar, currentProduct.name_en)}</h3>
+            <h3 className="mt-1 font-['Readex_Pro'] text-xl leading-relaxed text-[#F2E9DF]">{renderText(language, product.name_ar, product.name_en)}</h3>
           </div>
           <div className="flex items-center gap-2">
-            {!adminEditMode && <button type="button" aria-pressed={isWishlisted} aria-label={renderText(language, 'إضافة إلى قائمة الأمنيات', 'Toggle wishlist')} onClick={() => onToggleWishlist(product.id)} className={`rounded-full border p-2 ${isWishlisted ? 'border-[#D5BFA8] bg-[#581528] text-[#F2E9DF]' : 'border-[#F2E9DF]/15 text-[#A8958B]'}`}><Heart className={`h-5 w-5 ${isWishlisted ? 'fill-current' : ''}`} /></button>}
-            <button type="button" aria-label={renderText(language, 'إغلاق التفاصيل', 'Close details')} onClick={onClose} className="rounded-full border border-[#F2E9DF]/15 p-2 text-[#F2E9DF]">
-              <X className="h-5 w-5" />
-            </button>
+            <button type="button" aria-pressed={isWishlisted} aria-label={renderText(language, 'إضافة إلى قائمة الأمنيات', 'Toggle wishlist')} onClick={() => onToggleWishlist(product.id)} className={`rounded-full border p-2 ${isWishlisted ? 'border-[#D5BFA8] bg-[#581528] text-[#F2E9DF]' : 'border-[#F2E9DF]/15 text-[#A8958B]'}`}><Heart className={`h-5 w-5 ${isWishlisted ? 'fill-current' : ''}`} /></button>
+            <button type="button" aria-label={renderText(language, 'إغلاق التفاصيل', 'Close details')} onClick={onClose} className="rounded-full border border-[#F2E9DF]/15 p-2 text-[#F2E9DF]"><X className="h-5 w-5" /></button>
           </div>
         </div>
 
         <div className="space-y-4 p-4 sm:p-5">
           <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
             <div className="h-fit overflow-hidden rounded-[20px] border border-[#F2E9DF]/10 bg-[#140409]">
-              <div className="flex items-center justify-between border-b border-[#F2E9DF]/10 px-4 py-2">
-                <p className="text-xs uppercase tracking-[0.18em] text-[#D5BFA8]">{renderText(language, 'عرض المنتج من 3 زوايا', '3-Angle Product Gallery')}</p>
-              </div>
-              <ProductAngleGallery product={currentProduct} language={language} modal activeAngle={activeAngle} onAngleChange={setActiveAngle} />
-              {adminEditMode && (
-                <div className="space-y-2 border-t border-[#F2E9DF]/10 p-4">
-                  <label className="grid gap-1 text-xs text-[#D5BFA8]">صورة الزاوية 0{activeAngle + 1} · رابط الصورة
-                    <input value={currentProduct.gallery_images?.[activeAngle] || ''} onChange={(event) => updateAngleImage(event.target.value)} placeholder="Image URL" className="border border-[#F2E9DF]/15 bg-[#090204] p-3 text-sm text-[#F2E9DF]" />
-                  </label>
-                  <label className="inline-flex cursor-pointer border border-[#D5BFA8]/30 px-3 py-2 text-xs text-[#D5BFA8]">رفع صورة من الجهاز
-                    <input type="file" accept="image/*" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; if (file) void uploadAngleImage(file) }} />
-                  </label>
-                  {imageError && <p role="alert" className="text-xs text-rose-200">{imageError}</p>}
-                </div>
-              )}
+              <div className="flex items-center justify-between border-b border-[#F2E9DF]/10 px-4 py-2"><p className="text-xs uppercase tracking-[0.18em] text-[#D5BFA8]">{renderText(language, 'عرض المنتج من 3 زوايا', '3-Angle Product Gallery')}</p></div>
+              <ProductAngleGallery product={product} language={language} modal activeAngle={activeAngle} onAngleChange={setActiveAngle} />
             </div>
 
             <div className="space-y-4">
-            <div className="rounded-[24px] border border-[#F2E9DF]/10 bg-[#140409]/50 p-4">
-              <p className="mb-2 text-sm uppercase tracking-[0.2em] text-[#D5BFA8]">{renderText(language, 'عن العطر', 'About the Fragrance')}</p>
-              <p dir={language === 'ar' ? 'rtl' : 'ltr'} className="text-sm leading-7 text-[#F2E9DF]/85">
-                {renderText(language, currentProduct.description_ar || currentProduct.subtitle_ar, currentProduct.description_en || currentProduct.subtitle_en)}
-              </p>
-            </div>
-            <div className="rounded-[24px] border border-[#F2E9DF]/10 bg-[#140409]/50 p-4">
-              <div className="mb-3 flex items-center justify-between text-sm text-[#A8958B]">
-                <span>{renderText(language, 'درجة الثبات', 'Longevity')}</span>
-                <span>{renderText(language, currentProduct.longevity_label_ar || `${currentProduct.longevity || 10} ساعات`, currentProduct.longevity_label_en || `${currentProduct.longevity || 10}h`)} · {longevityPercent}%</span>
+              <div className="rounded-[24px] border border-[#F2E9DF]/10 bg-[#140409]/50 p-4">
+                <p className="mb-2 text-sm uppercase tracking-[0.2em] text-[#D5BFA8]">{renderText(language, 'عن العطر', 'About the Fragrance')}</p>
+                <p dir={language === 'ar' ? 'rtl' : 'ltr'} className="text-sm leading-7 text-[#F2E9DF]/85">{renderText(language, product.description_ar || product.subtitle_ar, product.description_en || product.subtitle_en)}</p>
               </div>
-              <div className="h-2 rounded-full bg-[#F2E9DF]/10">
-                <div className="h-full rounded-full bg-[#D5BFA8]" style={{ width: `${longevityPercent}%` }} />
+              <div className="rounded-[24px] border border-[#F2E9DF]/10 bg-[#140409]/50 p-4">
+                <div className="mb-3 flex items-center justify-between text-sm text-[#A8958B]"><span>{renderText(language, 'درجة الثبات', 'Longevity')}</span><span>{renderText(language, product.longevity_label_ar || `${product.longevity || 10} ساعات`, product.longevity_label_en || `${product.longevity || 10}h`)} · {longevityPercent}%</span></div>
+                <div className="h-2 rounded-full bg-[#F2E9DF]/10"><div className="h-full rounded-full bg-[#D5BFA8]" style={{ width: `${longevityPercent}%` }} /></div>
               </div>
-              {adminEditMode && <input aria-label="Longevity percentage" type="range" min="0" max="100" value={longevityPercent} onChange={(event) => updateDraft({ longevity_percent: Number(event.target.value) })} className="mt-3 w-full accent-[#D5BFA8]" />}
-            </div>
-
-            <div className="rounded-[24px] border border-[#F2E9DF]/10 bg-[#140409]/50 p-4">
-              <div className="mb-3 flex items-center justify-between text-sm text-[#A8958B]">
-                <span>{renderText(language, 'قوة الفوحان', 'Sillage & Projection')}</span>
-                <span>{sillagePercent}%</span>
+              <div className="rounded-[24px] border border-[#F2E9DF]/10 bg-[#140409]/50 p-4">
+                <div className="mb-3 flex items-center justify-between text-sm text-[#A8958B]"><span>{renderText(language, 'قوة الفوحان', 'Sillage & Projection')}</span><span>{sillagePercent}%</span></div>
+                <div className="h-2 rounded-full bg-[#F2E9DF]/10"><div className="h-full rounded-full bg-[#D5BFA8]" style={{ width: `${sillagePercent}%` }} /></div>
               </div>
-              <div className="h-2 rounded-full bg-[#F2E9DF]/10">
-                <div className="h-full rounded-full bg-[#D5BFA8]" style={{ width: `${sillagePercent}%` }} />
-              </div>
-              {adminEditMode && <input aria-label="Sillage percentage" type="range" min="0" max="100" value={sillagePercent} onChange={(event) => updateDraft({ sillage_percent: Number(event.target.value) })} className="mt-3 w-full accent-[#D5BFA8]" />}
-            </div>
-
-            <div className="rounded-[24px] border border-[#F2E9DF]/10 bg-[#140409]/50 p-4">
-              <p className="mb-3 text-sm uppercase tracking-[0.2em] text-[#D5BFA8]">{renderText(language, 'اختر الحجم:', 'Select Size:')}</p>
-              <div className="flex flex-wrap gap-2">
-                {sizes.map((size) => (
-                  <button key={size.size} type="button" onClick={() => setSelectedSizeName(size.size)} className={`min-h-11 border px-3 py-2 text-sm text-[#F2E9DF] ${activeSize?.size === size.size ? 'border-[#D5BFA8]' : 'border-[#F2E9DF]/15'}`}>
-                    {size.size}
-                  </button>
-                ))}
-              </div>
-              <DiscountPrice size={activeSize} language={language} className="mt-4" />
-              {adminEditMode && sizes.map((size, index) => {
-                const discount = size.compare_price > size.price && size.compare_price > 0 ? Math.round((size.compare_price - size.price) / size.compare_price * 100) : 0
-                return <div key={`${size.size}-controls`} className="mt-4 space-y-3 border-t border-[#F2E9DF]/10 pt-3">
-                  <div className="grid gap-2 sm:grid-cols-3">
-                    <label className="grid gap-1 text-[10px] text-[#A8958B]">الحجم<input value={size.size} onChange={(event) => updateSize(index, { size: event.target.value })} className="border border-[#F2E9DF]/15 bg-[#090204] p-2 text-sm text-[#F2E9DF]" /></label>
-                    <label className="grid gap-1 text-[10px] text-[#A8958B]">السعر الحقيقي للبيع (price)<input type="number" min="0" value={size.price} onChange={(event) => updateSize(index, { price: Number(event.target.value) })} className="border border-[#F2E9DF]/15 bg-[#090204] p-2 text-sm text-[#F2E9DF]" /></label>
-                    <label className="grid gap-1 text-[10px] text-[#A8958B]">السعر قبل الخصم (compare_price)<input type="number" min="0" value={size.compare_price} onChange={(event) => updateSize(index, { compare_price: Number(event.target.value) })} className="border border-[#F2E9DF]/15 bg-[#090204] p-2 text-sm text-[#F2E9DF]" /></label>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">{[15, 25, 35].map((percent) => <button key={percent} type="button" onClick={() => updateSize(index, { compare_price: Math.ceil((Number(size.price || 0) / (1 - percent / 100)) / 5) * 5 })} className="border border-[#D5BFA8]/25 px-2 py-1 text-[10px] text-[#D5BFA8]">+{percent}% خصم</button>)}<label className="ms-auto flex items-center gap-2 text-[10px] text-[#A8958B]"><input type="checkbox" checked={size.in_stock !== false} onChange={(event) => updateSize(index, { in_stock: event.target.checked })} />متوفر</label><button type="button" onClick={() => { updateDraft({ sizes: sizes.filter((_, sizeIndex) => sizeIndex !== index) }); if (selectedSizeName === size.size) setSelectedSizeName('') }} className="text-xs text-rose-200">حذف الحجم ×</button></div>
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#D5BFA8]"><span>{discount ? `SAVE ${discount}%` : 'لا يوجد خصم'}</span><DiscountPrice size={size} language={language} /></div>
+              <div className="rounded-[24px] border border-[#F2E9DF]/10 bg-[#140409]/50 p-4">
+                <p className="mb-3 text-sm uppercase tracking-[0.2em] text-[#D5BFA8]">{renderText(language, 'اختر الحجم:', 'Select Size:')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {sizes.map((size) => <button key={size.size} type="button" disabled={size.in_stock === false} onClick={() => setSelectedSizeName(size.size)} className={`min-h-11 border px-3 py-2 text-sm text-[#F2E9DF] ${activeSize?.size === size.size ? 'border-[#D5BFA8]' : 'border-[#F2E9DF]/15'} disabled:opacity-40`}>{size.size}</button>)}
                 </div>
-              })}
-              {adminEditMode && <button type="button" onClick={() => updateDraft({ sizes: [...sizes, { size: '30ml', price: 0, compare_price: 0, in_stock: true }] })} className="mt-3 border border-dashed border-[#D5BFA8]/35 px-3 py-2 text-xs text-[#D5BFA8]">+ حجم جديد</button>}
-            </div>
-
-            {!adminEditMode && <button type="button" disabled={!activeSize || activeSize.in_stock === false} onClick={() => addToCart(product, activeSize)} className="w-full border border-[#F2E9DF] bg-[#F2E9DF] px-5 py-3 font-medium text-[#1A050B] transition-colors hover:border-[#F2E9DF]/40 hover:bg-[#581528] hover:text-[#F2E9DF] disabled:opacity-40">{renderText(language, 'أضف إلى السلة', 'Add to Bag')}</button>}
-
+                <DiscountPrice size={activeSize} language={language} className="mt-4" />
+              </div>
+              <button type="button" disabled={!activeSize || activeSize.in_stock === false} onClick={() => addToCart(product, activeSize)} className="w-full border border-[#F2E9DF] bg-[#F2E9DF] px-5 py-3 font-medium text-[#1A050B] transition-colors hover:border-[#F2E9DF]/40 hover:bg-[#581528] hover:text-[#F2E9DF] disabled:opacity-40">{renderText(language, 'أضف إلى السلة', 'Add to Bag')}</button>
             </div>
           </div>
-          {adminEditMode && (
-            <section className="grid gap-3 rounded-[20px] border border-[#F2E9DF]/10 bg-[#140409]/60 p-4 md:grid-cols-2">
-              <h4 className="md:col-span-2 text-sm text-[#D5BFA8]">بيانات العطر / Product Details</h4>
-              {[
-                ['name_ar', 'اسم العطر بالعربية'],
-                ['name_en', 'Product name (English)'],
-                ['subtitle_ar', 'العنوان الفرعي بالعربية'],
-                ['subtitle_en', 'Subtitle (English)'],
-                ['description_ar', 'وصف العطر بالعربية'],
-                ['description_en', 'Description in English'],
-              ].map(([key, label]) => (
-                <label key={key} className="grid gap-1 text-xs text-[#D5BFA8]">{label}
-                  {key.startsWith('description')
-                    ? <textarea value={currentProduct[key] || ''} onChange={(event) => updateDraft({ [key]: event.target.value })} className="min-h-20 border border-[#F2E9DF]/15 bg-[#090204] p-3 text-sm text-[#F2E9DF]" />
-                    : <input value={currentProduct[key] || ''} onChange={(event) => updateDraft({ [key]: event.target.value })} className="border border-[#F2E9DF]/15 bg-[#090204] p-3 text-sm text-[#F2E9DF]" />}
-                </label>
-              ))}
-              <label className="grid gap-1 text-xs text-[#D5BFA8]">القسم / Category
-                <select value={currentProduct.category_id || ''} onChange={(event) => updateDraft({ category_id: event.target.value })} className="border border-[#F2E9DF]/15 bg-[#090204] p-3 text-sm text-[#F2E9DF]">
-                  {categories.filter((category) => category.slug !== 'all').map((category) => <option key={category.id} value={category.id}>{renderText(language, category.name_ar, category.name_en)}</option>)}
-                </select>
-              </label>
-            </section>
-          )}
-          {adminEditMode && (
-            <div className="flex justify-end gap-2 border-t border-[#F2E9DF]/10 pt-4">
-              <button type="button" onClick={onClose} className="border border-[#F2E9DF]/20 px-4 py-3 text-sm">إلغاء</button>
-              <button type="button" onClick={() => onSaveProduct(draft)} className="bg-[#F2E9DF] px-5 py-3 text-sm font-semibold text-[#140409]">حفظ التعديلات ✓</button>
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -1587,11 +1385,7 @@ function WishlistDrawer({ open, language, products, wishlist, onClose, onRemove,
   )
 }
 
-export function AdminStorefrontEditor({ onExit, onLock, onOpenOperations }) {
-  return <AppShell adminMode onExit={onExit} onLock={onLock} onOpenOperations={onOpenOperations} />
-}
-
-function AppShell({ adminMode = false, onExit, onLock, onOpenOperations }) {
+function AppShell() {
   const {
     language,
     setLanguage,
@@ -1618,9 +1412,6 @@ function AppShell({ adminMode = false, onExit, onLock, onOpenOperations }) {
     updateCustomerProfile,
     logoutCustomer,
     store,
-    updateProducts,
-    updateCategories,
-    updateQuizQuestions,
     storeSyncError,
     clearStoreSyncError,
   } = useAppContext()
@@ -1643,8 +1434,6 @@ function AppShell({ adminMode = false, onExit, onLock, onOpenOperations }) {
   const [couponMessage, setCouponMessage] = useState('')
   const [checkoutForm, setCheckoutForm] = useState(() => checkoutValuesFromCustomer(currentCustomer))
   const [orderPlaced, setOrderPlaced] = useState(null)
-  const [adminProductEditing, setAdminProductEditing] = useState(false)
-  const [adminEditToast, setAdminEditToast] = useState('')
   useEffect(() => {
     if (!toast) return
     const timer = setTimeout(() => setToast(''), 1800)
@@ -1652,72 +1441,6 @@ function AppShell({ adminMode = false, onExit, onLock, onOpenOperations }) {
   }, [toast])
 
   const t = (ar, en) => (language === 'ar' ? ar : en)
-  const saveAdminProduct = (productDraft) => {
-    if (!productDraft?.name_ar?.trim() || !productDraft?.name_en?.trim()) {
-      setAdminEditToast(t('أدخل اسم العطر باللغتين.', 'Enter the perfume name in both languages.'))
-      return
-    }
-    if (!productDraft.category_id) {
-      setAdminEditToast(t('اختر قسماً للعطر.', 'Choose a category for this perfume.'))
-      return
-    }
-    const exists = store.products.some((product) => product.id === productDraft.id)
-    const nextProducts = exists
-      ? store.products.map((product) => product.id === productDraft.id ? productDraft : productDraft.is_top_seller ? { ...product, is_top_seller: false } : product)
-      : [...store.products, productDraft]
-    updateProducts(nextProducts)
-    setAdminProductEditing(false)
-    setSelectedProduct(null)
-    setAdminEditToast(t('تم التحديث تلقائياً في الموقع بالكامل ✓', 'Updated across the storefront ✓'))
-  }
-  const openAdminProduct = (product) => {
-    setSelectedProduct(product ? structuredClone(product) : {
-      id: globalThis.crypto?.randomUUID?.() || `product-${Date.now()}`,
-      name_ar: '', name_en: '', subtitle_ar: '', subtitle_en: '', description_ar: '', description_en: '',
-      category_id: store.categories.find((category) => category.slug !== 'all')?.id || '',
-      image_url: '', gallery_images: ['', '', ''], longevity_label_ar: '10 ساعات', longevity_label_en: '10h',
-      longevity_percent: 80, sillage_percent: 86,
-      sizes: [{ size: '50ml', price: 0, compare_price: 0, in_stock: true }], active: true, is_top_seller: false,
-    })
-    setAdminProductEditing(true)
-  }
-  const addAdminCategory = () => {
-    const name_ar = window.prompt('اسم القسم بالعربية')
-    if (!name_ar?.trim()) return
-    const name_en = window.prompt('Category name in English')
-    if (!name_en?.trim()) return
-    const slug = name_en.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-    if (!slug || store.categories.some((category) => category.slug === slug)) {
-      setAdminEditToast(t('اسم القسم مستخدم بالفعل أو غير صالح.', 'That category name is already in use or invalid.'))
-      return
-    }
-    updateCategories([...store.categories, { id: globalThis.crypto?.randomUUID?.() || `category-${Date.now()}`, slug, name_ar: name_ar.trim(), name_en: name_en.trim(), sort_order: store.categories.length, is_custom: true }])
-    setAdminEditToast(t('تم تحديث الأقسام ✓', 'Categories updated ✓'))
-  }
-  const deleteAdminCategory = (category) => {
-    if (!window.confirm(t(`حذف قسم ${category.name_ar}؟`, `Delete ${category.name_en}?`))) return
-    const categories = store.categories.filter((item) => item.id !== category.id)
-    const fallbackCategory = categories.find((item) => item.slug !== 'all')
-    updateCategories(categories)
-    updateProducts(store.products.map((product) => product.category_id === category.id ? { ...product, category_id: fallbackCategory?.id || '' } : product))
-    if (catalogFilter === category.id) setCatalogFilter('all')
-    setAdminEditToast(t('تم حذف القسم وتحديث العطور المرتبطة به ✓', 'Category deleted and its perfumes reassigned ✓'))
-  }
-  const selectTopSeller = (productId) => updateProducts(store.products.map((product) => ({ ...product, is_top_seller: product.id === productId })))
-  const toggleTopSeller = (product) => updateProducts(store.products.map((item) => ({ ...item, is_top_seller: item.id === product.id ? !product.is_top_seller : product.is_top_seller ? false : item.is_top_seller })))
-  const toggleStock = (product) => {
-    const inStock = !product.sizes?.some((size) => size.in_stock !== false)
-    updateProducts(store.products.map((item) => item.id === product.id ? { ...item, sizes: (item.sizes || []).map((size) => ({ ...size, in_stock: inStock })) } : item))
-  }
-  const deleteAdminProduct = (product) => {
-    if (!window.confirm(t(`هل تريد حذف عطر ${product.name_ar}؟`, `Delete ${product.name_en}?`))) return
-    updateProducts(store.products.filter((item) => item.id !== product.id))
-    updateQuizQuestions((store.quiz_questions || []).map((question) => ({
-      ...question,
-      options: (question.options || []).map((option) => ({ ...option, recommended_product_ids: (option.recommended_product_ids || []).filter((id) => id !== product.id) })),
-    })))
-    setAdminEditToast(t('تم حذف العطر ✓', 'Perfume deleted ✓'))
-  }
   const finishSplash = useCallback(() => {
     setSplashOpen(false)
     setPouringActive(true)
@@ -1843,21 +1566,8 @@ function AppShell({ adminMode = false, onExit, onLock, onOpenOperations }) {
 
   return (
     <div className="min-h-screen overflow-x-clip bg-[#090204] text-[#F2E9DF]">
-      {adminMode && (
-        <div className="admin-operation-bar sticky top-0 z-[90] flex h-12 items-center gap-2 overflow-x-auto border-b border-[#D5BFA8]/30 bg-[#100308]/95 px-3 shadow-lg backdrop-blur">
-          <strong className="shrink-0 text-[10px] tracking-wider text-[#D5BFA8]">MADAR</strong>
-          <button type="button" onClick={() => onOpenOperations?.('orders')} className="shrink-0 border border-[#D5BFA8]/25 px-3 py-2 text-[10px]">📦 الطلبات والشحن ({store.orders.filter((order) => order.status === 'pending').length})</button>
-          <button type="button" onClick={() => onOpenOperations?.('coupons')} className="shrink-0 border border-[#D5BFA8]/25 px-3 py-2 text-[10px]">🎟 كوبونات الخصم</button>
-          <button type="button" onClick={() => onOpenOperations?.('customers')} className="shrink-0 border border-[#D5BFA8]/25 px-3 py-2 text-[10px]">👥 العملاء ({customers.length})</button>
-          <button type="button" onClick={() => onOpenOperations?.('settings')} className="shrink-0 border border-[#D5BFA8]/25 px-3 py-2 text-[10px]">⚙ إعدادات الشحن واللوجو والأمان</button>
-          <button type="button" onClick={() => setLanguage((current) => current === 'ar' ? 'en' : 'ar')} className="shrink-0 border border-[#D5BFA8]/20 px-3 py-2 text-[10px]">{language === 'ar' ? 'EN' : 'عربي'}</button>
-          <a href="/" target="_blank" rel="noreferrer" className="shrink-0 border border-[#D5BFA8]/20 px-3 py-2 text-[10px]">معاينة المتجر الأساسي ↗</a>
-          {onExit && <button type="button" onClick={onExit} className="shrink-0 border border-[#D5BFA8]/20 px-3 py-2 text-[10px]">لوحة الإدارة</button>}
-          {onLock && <button type="button" onClick={onLock} className="shrink-0 bg-[#581528] px-3 py-2 text-[10px]">قفل اللوحة 🔒</button>}
-        </div>
-      )}
       <div className="mx-auto max-w-[1600px] overflow-x-clip">
-        <div className={`sticky ${adminMode ? 'top-12' : 'top-0'} z-40 border-b border-[#F2E9DF]/10 bg-[#090204]/95 backdrop-blur-md`}>
+        <div className="sticky top-0 z-40 border-b border-[#F2E9DF]/10 bg-[#090204]/95 backdrop-blur-md">
           <div className="flex items-center justify-between gap-2 px-3 py-2 sm:px-4 sm:py-3 md:px-8">
             <a href="#home" onClick={(event) => handleSectionNavigation(event, 'home')} aria-label="MADAR / مدار — Home" className="flex shrink-0 items-center gap-2 sm:gap-4">
               <MadarBrandLockup settings={store.settings} compact />
@@ -1927,12 +1637,8 @@ function AppShell({ adminMode = false, onExit, onLock, onOpenOperations }) {
           <IconicHero language={language} isRevealing={heroRevealing} pouringActive={pouringActive} settings={store.settings} />
           <IconicEditorial
             product={flagshipProduct}
-            products={store.products}
             language={language}
             addToCart={handleAddToCart}
-            adminMode={adminMode}
-            onSelectTopSeller={selectTopSeller}
-            onEditProduct={openAdminProduct}
           />
 
           <section id="collection" className="scroll-mt-24 border-b border-[#F2E9DF]/10 bg-[#140409] px-4 py-16 md:px-8 md:py-24">
@@ -1954,41 +1660,21 @@ function AppShell({ adminMode = false, onExit, onLock, onOpenOperations }) {
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     {[{ id: 'all', name_ar: 'الكل', name_en: 'All' }, ...store.categories.filter((category) => category.slug !== 'all')].map((category) => {
-                      const customCategory = category.is_custom || category.id.startsWith('category-')
-                      return <span key={category.id} className={`inline-flex items-center border text-xs ${catalogFilter === category.id ? 'border-[#D5BFA8]/60 bg-[#581528]/40 text-[#F2E9DF]' : 'border-[#F2E9DF]/15 text-[#A8958B]'}`}>
-                        <button type="button" aria-pressed={catalogFilter === category.id} onClick={() => setCatalogFilter(category.id)} className="px-3 py-2">{t(category.name_ar, category.name_en)}</button>
-                        {adminMode && customCategory && <button type="button" aria-label={`${t('حذف قسم', 'Delete category')} ${t(category.name_ar, category.name_en)}`} onClick={() => deleteAdminCategory(category)} className="border-s border-[#F2E9DF]/15 px-2 py-2 text-rose-200">×</button>}
-                      </span>
+                      return <button key={category.id} type="button" aria-pressed={catalogFilter === category.id} onClick={() => setCatalogFilter(category.id)} className={`border px-3 py-2 text-xs ${catalogFilter === category.id ? 'border-[#D5BFA8]/60 bg-[#581528]/40 text-[#F2E9DF]' : 'border-[#F2E9DF]/15 text-[#A8958B]'}`}>{t(category.name_ar, category.name_en)}</button>
                     })}
-                    {adminMode && <button type="button" onClick={addAdminCategory} className="border border-dashed border-[#D5BFA8]/50 px-3 py-2 text-xs text-[#D5BFA8]">+ إضافة قسم</button>}
                   </div>
                 </div>
               </div>
 
               <div className="grid auto-rows-fr gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {filteredProducts.map((product) => (
-                  <div key={product.id} className={`relative flex h-full flex-col ${adminMode ? 'admin-edit-target' : ''}`}>
-                    {adminMode && (
-                      <div className="grid grid-cols-2 gap-1 border border-b-0 border-[#D5BFA8]/25 bg-[#1D070E] p-1.5 text-[10px]">
-                        <button type="button" title="تعديل العطر والمقاسات والزوايا" onClick={() => openAdminProduct(product)} className="min-w-0 truncate border border-[#D5BFA8]/25 px-2 py-1.5">✎ تعديل العطر</button>
-                        <button type="button" onClick={() => toggleStock(product)} className={`min-w-0 truncate border px-2 py-1.5 ${product.sizes?.some((size) => size.in_stock !== false) ? 'border-emerald-200/20 text-emerald-100' : 'border-rose-200/20 text-rose-100'}`}>{product.sizes?.some((size) => size.in_stock !== false) ? 'متوفر' : 'نفذ'}</button>
-                        <button type="button" aria-pressed={Boolean(product.is_top_seller)} onClick={() => toggleTopSeller(product)} className={`min-w-0 truncate border px-2 py-1.5 ${product.is_top_seller ? 'border-[#D5BFA8]/60 text-[#D5BFA8]' : 'border-[#F2E9DF]/15'}`}>★ الأكثر مبيعاً</button>
-                        <button type="button" onClick={() => deleteAdminProduct(product)} className="min-w-0 truncate border border-rose-200/20 px-2 py-1.5 text-rose-200">حذف</button>
-                      </div>
-                    )}
-                    <ProductCard product={product} language={language} addToCart={handleAddToCart} onExplore={() => adminMode ? openAdminProduct(product) : setSelectedProduct(product)} adminEditMode={adminMode} isWishlisted={wishlist.includes(product.id)} onToggleWishlist={toggleCustomerWishlist} />
-                  </div>
+                  <ProductCard key={product.id} product={product} language={language} addToCart={handleAddToCart} onExplore={() => setSelectedProduct(product)} isWishlisted={wishlist.includes(product.id)} onToggleWishlist={toggleCustomerWishlist} />
                 ))}
-                {adminMode && (
-                  <button type="button" onClick={() => openAdminProduct(null)} className="flex h-full min-h-[420px] flex-col items-center justify-center border border-dashed border-[#D5BFA8]/50 bg-[#090204] p-8 text-center text-[#D5BFA8]">
-                    <span className="text-4xl">+</span><span className="mt-3">+ إضافة عطر جديد</span>
-                  </button>
-                )}
               </div>
             </div>
           </section>
 
-          <OrbitConsultation products={store.products} questions={store.quiz_questions || []} language={language} addToCart={handleAddToCart} adminMode={adminMode} onSaveQuestions={updateQuizQuestions} />
+          <OrbitConsultation products={store.products} questions={store.quiz_questions || []} language={language} addToCart={handleAddToCart} />
 
           <section id="story" className="border-b border-[#F2E9DF]/10 bg-[#090204] px-4 py-16 md:px-8 md:py-24">
             <div className="mx-auto max-w-7xl border border-[#F2E9DF]/15 bg-[#140409] p-7 md:p-10">
@@ -2194,14 +1880,11 @@ function AppShell({ adminMode = false, onExit, onLock, onOpenOperations }) {
       {selectedProduct && <ProductOrbitModal
         key={selectedProduct.id}
         product={store.products.find((product) => product.id === selectedProduct.id) || selectedProduct}
-        onClose={() => { setSelectedProduct(null); setAdminProductEditing(false) }}
+        onClose={() => setSelectedProduct(null)}
         language={language}
         addToCart={handleAddToCart}
         isWishlisted={wishlist.includes(selectedProduct.id)}
         onToggleWishlist={toggleCustomerWishlist}
-        adminEditMode={adminMode && adminProductEditing}
-        categories={store.categories}
-        onSaveProduct={saveAdminProduct}
       />}
       <WishlistDrawer open={wishlistOpen} language={language} products={store.products} wishlist={wishlist} onClose={() => setWishlistOpen(false)} onRemove={removeFromWishlist} onExplore={(product) => { setWishlistOpen(false); setSelectedProduct(product) }} addToCart={handleAddToCart} />
       <CustomerProfileModal key={`${profileOpen}-${currentCustomer?.id || 'guest'}`} open={profileOpen} language={language} currentCustomer={currentCustomer} orders={store.orders} products={store.products} onClose={() => setProfileOpen(false)} onLogin={handleCustomerLogin} onRegister={handleCustomerRegister} onUpdate={handleCustomerUpdate} onLogout={handleCustomerLogout} addToCart={addToCart} />
@@ -2222,12 +1905,6 @@ function AppShell({ adminMode = false, onExit, onLock, onOpenOperations }) {
           {toast}
         </div>
       )}
-      {adminMode && adminEditToast && (
-        <div role="status" className="fixed bottom-5 start-1/2 z-[100] -translate-x-1/2 rounded-full border border-[#D5BFA8]/40 bg-[#581528] px-5 py-3 text-xs shadow-lg">
-          {adminEditToast}
-          <button type="button" aria-label="إغلاق" onClick={() => setAdminEditToast('')} className="ms-3">×</button>
-        </div>
-      )}
       {storeSyncError && (
         <div role="alert" className="fixed bottom-20 start-1/2 z-[100] flex -translate-x-1/2 items-center gap-3 rounded-xl border border-rose-200/30 bg-[#3b101d] px-5 py-3 text-sm text-rose-100 shadow-lg">
           {storeSyncError}<button type="button" onClick={clearStoreSyncError} aria-label="إغلاق">×</button>
@@ -2239,27 +1916,14 @@ function AppShell({ adminMode = false, onExit, onLock, onOpenOperations }) {
   )
 }
 
-function ProductCard({ product, language, addToCart, onExplore, adminEditMode = false, isWishlisted, onToggleWishlist }) {
+function ProductCard({ product, language, addToCart, onExplore, isWishlisted, onToggleWishlist }) {
   const [selectedSizeName, setSelectedSizeName] = useState(product.sizes?.[0]?.size || '50ml')
   const selectedSize = product.sizes?.find((size) => size.size === selectedSizeName) || product.sizes?.[0] || { size: '50ml', price: 0 }
 
   const primaryPrice = selectedSize?.price || product.sizes?.[0]?.price || 0
 
   return (
-    <article
-      role={adminEditMode ? 'group' : undefined}
-      tabIndex={adminEditMode ? 0 : undefined}
-      onClick={(event) => {
-        if (adminEditMode && !event.target.closest('button, input, select, a')) onExplore()
-      }}
-      onKeyDown={(event) => {
-        if (adminEditMode && (event.key === 'Enter' || event.key === ' ') && event.target === event.currentTarget) {
-          event.preventDefault()
-          onExplore()
-        }
-      }}
-      className={`group relative flex h-full flex-col justify-between border border-[#F2E9DF]/15 bg-[#090204] transition-colors hover:border-[#D5BFA8]/45 ${adminEditMode ? 'cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#D5BFA8]' : ''}`}
-    >
+    <article className="group relative flex h-full flex-col justify-between border border-[#F2E9DF]/15 bg-[#090204] transition-colors hover:border-[#D5BFA8]/45">
       <span className="absolute left-2 top-2 z-10 text-[#D5BFA8]/80">+</span>
       <span className="absolute right-2 top-2 z-10 text-[#D5BFA8]/80">+</span>
       <div className="relative aspect-[4/5] overflow-hidden bg-[radial-gradient(ellipse_at_50%_55%,rgba(58,11,25,.2),transparent_50%),#140409]">

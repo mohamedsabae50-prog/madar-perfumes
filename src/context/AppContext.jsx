@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import dataService from '../services/dataService'
 import { AppContext } from './AppContextBase'
+import { hasSupabaseConfig, supabase } from '../lib/supabase'
 
 const STORAGE_KEYS = {
   language: 'madar_language',
@@ -65,18 +66,29 @@ export function AppProvider({ children }) {
     }
   })
 
-  useEffect(() => {
-    const bootstrap = async () => {
+  const refreshFromSupabase = useCallback(async () => {
+    try {
       const nextState = await dataService.loadStoreState()
       setStore(nextState)
       setCustomers(nextState.customers || [])
+      return nextState
+    } catch (error) {
+      console.error('Unable to refresh store data:', error)
+      setStoreSyncError(error.message || 'تعذر تحديث بيانات المتجر.')
+      return null
+    }
+  }, [])
+
+  useEffect(() => {
+    const bootstrap = async () => {
+      await refreshFromSupabase()
       const savedCustomer = dataService.getCurrentCustomer()
       setCurrentCustomer(savedCustomer)
       if (savedCustomer) setWishlist(savedCustomer.wishlist || [])
     }
 
-    bootstrap()
-  }, [])
+    void bootstrap()
+  }, [refreshFromSupabase])
 
   useEffect(() => {
     const applyStorePayload = (raw) => {
@@ -93,6 +105,9 @@ export function AppProvider({ children }) {
       if (event.key !== 'madar_store_v10' || !event.newValue) return
       applyStorePayload(event.newValue)
     }
+    const refreshVisibleStore = () => {
+      if (document.visibilityState === 'visible') void refreshFromSupabase()
+    }
     let channel
     if ('BroadcastChannel' in window) {
       channel = new BroadcastChannel('madar_live_sync')
@@ -103,12 +118,32 @@ export function AppProvider({ children }) {
         }
       })
     }
+    let realtimeChannel = null
+    if (hasSupabaseConfig && supabase) {
+      realtimeChannel = supabase
+        .channel('madar-live-db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public' }, () => {
+          void refreshFromSupabase()
+        })
+        .subscribe((status, error) => {
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            const message = error?.message || `Supabase Realtime subscription ${status.toLowerCase()}.`
+            console.error('Unable to subscribe to Supabase Realtime:', message)
+            setStoreSyncError(message)
+          }
+        })
+    }
     window.addEventListener('storage', syncStore)
+    window.addEventListener('focus', refreshVisibleStore)
+    document.addEventListener('visibilitychange', refreshVisibleStore)
     return () => {
       window.removeEventListener('storage', syncStore)
+      window.removeEventListener('focus', refreshVisibleStore)
+      document.removeEventListener('visibilitychange', refreshVisibleStore)
       channel?.close()
+      if (realtimeChannel) void supabase?.removeChannel(realtimeChannel)
     }
-  }, [])
+  }, [refreshFromSupabase])
 
   useEffect(() => {
     document.documentElement.lang = language

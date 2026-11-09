@@ -474,3 +474,26 @@ ON CONFLICT (code) DO UPDATE SET
   min_order_amount = EXCLUDED.min_order_amount,
   show_on_home = EXCLUDED.show_on_home,
   active = EXCLUDED.active;
+
+DO $$
+DECLARE
+  table_name text;
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+    FOREACH table_name IN ARRAY ARRAY['categories', 'products', 'coupons', 'quiz_questions', 'store_settings', 'orders', 'customers']
+    LOOP
+      IF to_regclass(format('public.%I', table_name)) IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1
+          FROM pg_publication_tables
+          WHERE pubname = 'supabase_realtime'
+            AND schemaname = 'public'
+            AND tablename = table_name
+        )
+      THEN
+        EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE public.%I', table_name);
+      END IF;
+    END LOOP;
+  END IF;
+END
+$$;

@@ -281,52 +281,48 @@ export function logoutCustomer() {
 
 export async function loadStoreState() {
   if (hasSupabaseConfig && supabase) {
-    try {
-      const [{ data: categories = [] }, { data: products = [] }, { data: coupons = [] }, { data: settings }, { data: orders = [] }, { data: quizConfig }] = await Promise.all([
-        supabase.from('categories').select('*').order('sort_order', { ascending: true }),
-        supabase.from('products').select('*').eq('active', true),
-        supabase.from('coupons').select('*'),
-        supabase.from('store_settings').select('*').limit(1).maybeSingle(),
-        supabase.from('orders').select('*').order('created_at', { ascending: false }),
-        supabase.from('quiz_questions').select('questions').eq('id', 'default').maybeSingle(),
-      ])
-
-      const fallback = ensureLocalSeed()
-      const state = {
-        categories: categories.length
-          ? [
-              ...categories.map((category) => ({
-                ...category,
-                is_custom: !seedData.categories.some((seedCategory) => seedCategory.slug === category.slug),
-              })),
-              ...fallback.categories.filter((category) => (category.is_custom || category.id.startsWith('category-')) && !categories.some((item) => item.id === category.id)),
-            ]
-          : fallback.categories,
-        products: products.length
-          ? products.map((product, index) => {
-              const seedProduct = seedData.products.find((item) => item.id === product.id)
-              return {
-                ...product,
-                gallery_images: Array.isArray(product.gallery_images) ? product.gallery_images : seedProduct?.gallery_images || [],
-                is_top_seller: product.is_top_seller ?? seedProduct?.is_top_seller ?? index === 0,
-                longevity_label_ar: product.longevity_label_ar ?? seedProduct?.longevity_label_ar ?? `${product.longevity ?? seedProduct?.longevity ?? 10} ساعات`,
-                longevity_label_en: product.longevity_label_en ?? seedProduct?.longevity_label_en ?? `${product.longevity ?? seedProduct?.longevity ?? 10}h`,
-                longevity_percent: product.longevity_percent ?? seedProduct?.longevity_percent ?? Math.min(100, Number(product.longevity ?? seedProduct?.longevity ?? 10) * 8),
-                sillage_percent: product.sillage_percent ?? seedProduct?.sillage_percent ?? product.sillage ?? seedProduct?.sillage ?? 80,
-              }
-            })
-          : fallback.products,
-        coupons: coupons.length ? coupons : fallback.coupons,
-        quiz_questions: Array.isArray(quizConfig?.questions) ? quizConfig.questions : fallback.quiz_questions,
-        settings: mergeSettings(settings || fallback.settings),
-        orders: orders.length ? orders : fallback.orders,
-        customers: await listCustomers(),
-      }
-      writeLocalData(state)
-      return state
-    } catch {
-      return ensureLocalSeed()
+    const results = await Promise.all([
+      supabase.from('categories').select('*').order('sort_order', { ascending: true }),
+      supabase.from('products').select('*').eq('active', true),
+      supabase.from('coupons').select('*'),
+      supabase.from('store_settings').select('*').limit(1).maybeSingle(),
+      supabase.from('orders').select('*').order('created_at', { ascending: false }),
+      supabase.from('quiz_questions').select('questions').eq('id', 'default').maybeSingle(),
+    ])
+    const failedQuery = results.find(({ error }) => error)
+    if (failedQuery?.error) {
+      throw new Error(`تعذر تحميل بيانات المتجر من Supabase: ${failedQuery.error.message}`)
     }
+
+    const [categoryResult, productResult, couponResult, settingsResult, orderResult, quizResult] = results
+    const fallback = getDefaultState()
+    const categories = categoryResult.data || []
+    const products = productResult.data || []
+    const state = {
+      categories: categories.map((category) => ({
+        ...category,
+        is_custom: !seedData.categories.some((seedCategory) => seedCategory.slug === category.slug),
+      })),
+      products: products.map((product, index) => {
+        const seedProduct = seedData.products.find((item) => item.id === product.id)
+        return {
+          ...product,
+          gallery_images: Array.isArray(product.gallery_images) ? product.gallery_images : seedProduct?.gallery_images || [],
+          is_top_seller: product.is_top_seller ?? seedProduct?.is_top_seller ?? index === 0,
+          longevity_label_ar: product.longevity_label_ar ?? seedProduct?.longevity_label_ar ?? `${product.longevity ?? seedProduct?.longevity ?? 10} ساعات`,
+          longevity_label_en: product.longevity_label_en ?? seedProduct?.longevity_label_en ?? `${product.longevity ?? seedProduct?.longevity ?? 10}h`,
+          longevity_percent: product.longevity_percent ?? seedProduct?.longevity_percent ?? Math.min(100, Number(product.longevity ?? seedProduct?.longevity ?? 10) * 8),
+          sillage_percent: product.sillage_percent ?? seedProduct?.sillage_percent ?? product.sillage ?? seedProduct?.sillage ?? 80,
+        }
+      }),
+      coupons: couponResult.data || [],
+      quiz_questions: Array.isArray(quizResult.data?.questions) ? quizResult.data.questions : fallback.quiz_questions,
+      settings: mergeSettings(settingsResult.data || fallback.settings),
+      orders: orderResult.data || [],
+      customers: await listCustomers(),
+    }
+    writeLocalData(state)
+    return state
   }
 
   return ensureLocalSeed()

@@ -355,25 +355,6 @@ select {
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
 }
 
-.admin-edit-target {
-  outline: 1px dashed transparent;
-  outline-offset: -2px;
-  transition: outline-color 160ms ease;
-}
-
-.admin-edit-target:hover,
-.admin-edit-target:focus-within {
-  outline-color: rgba(213, 191, 168, 0.75);
-}
-
-.admin-operation-bar {
-  scrollbar-width: none;
-}
-
-.admin-operation-bar::-webkit-scrollbar {
-  display: none;
-}
-
 .cosmic-nebula,
 .cosmic-galaxy-image,
 .cosmic-orbit-tracks,
